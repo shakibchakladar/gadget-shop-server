@@ -1,13 +1,18 @@
 const express = require("express");
 const cors = require("cors");
-const jwt=require('jsonwebtoken')
+const jwt = require("jsonwebtoken");
 const { MongoClient, ServerApiVersion } = require("mongodb");
 require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 4000;
 
 // middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    optionsSuccessStatus: 200,
+  })
+);
 app.use(express.json());
 
 // mongodb
@@ -21,6 +26,10 @@ const client = new MongoClient(url, {
   },
 });
 
+// collections
+const userCollection = client.db("gadgetdb").collection("users");
+const productCollection = client.db("gadgetdb").collection("products");
+
 const dbConnect = async () => {
   try {
     client.connect();
@@ -32,21 +41,40 @@ const dbConnect = async () => {
 
 dbConnect();
 
+// insert user in db
+app.post("/users", async (req, res) => {
+  const user = req.body;
+  const query = { email: user.email };
+  const existingUser = await userCollection.findOne(query);
+
+  if (existingUser) {
+    return res.send({ message: "user already exist in db" });
+  }
+
+  const result = await userCollection.insertOne(user);
+  res.send(result);
+});
+
+// get user
+app.get("/user/:email", async (req, res) => {
+  const query = { email: req.params.email };
+  const result = await userCollection.findOne(query);
+  res.send(result);
+});
+
 // api
 app.get("/", (req, res) => {
   res.send("gadget server is running ");
 });
 
-
 // jwt
-app.post('/authentication',async(req,res)=>{
-  const userEmail=req.body
-  const token=jwt.sign(userEmail,process.env.ACCESS_KEY_TOKEN,{expiresIn:'10d'})
-  res.send({token});
+app.post("/authentication", async (req, res) => {
+  const userEmail = req.body;
+  const token = jwt.sign(userEmail, process.env.ACCESS_KEY_TOKEN, {
+    expiresIn: "10d",
+  });
+  res.send({ token });
 });
-
-
-
 
 app.listen(port, () => {
   console.log(`server is running on port, ${port}`);
