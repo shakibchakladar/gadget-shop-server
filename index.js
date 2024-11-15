@@ -31,6 +31,17 @@ const verifyJWT=(req,res,next)=>{
   })
 }
 
+// verrify seller
+const verifySeller=async(req,res,next)=>{
+  const email=req.decoded.email;
+  const query={email:email}
+  const user=userCollection.findOne(query)
+  if(user?.role !=='seller'){
+    return res.send({message: 'Forbidden access'})
+  }
+  next();
+}
+
 // mongodb
 const url = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.9ttivus.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -79,7 +90,7 @@ app.get("/user/:email", async (req, res) => {
 });
 
 // add products
-app.post("/add-products",async(req,res)=>{
+app.post("/add-products",verifyJWT,verifySeller, async(req,res)=>{
   const product=req.body
   const result=await productCollection.insertOne(product)
   res.send(result)
