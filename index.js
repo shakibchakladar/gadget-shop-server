@@ -15,6 +15,22 @@ app.use(
 );
 app.use(express.json());
 
+// token verification
+const verifyJWT=(req,res,next)=>{
+  const authorization=req.header.authorization;
+  if(!authorization){
+    return res.send({message:'no token found'})
+  }
+  const token=authorization.split( )[1];
+  jwt.verify(token,process.env.ACCESS_KEY_TOKEN,(err,decoded)=>{
+    if(err){
+      return res.send({message: 'invalid token'})
+    }
+    res.decoded=decoded;
+    next();
+  })
+}
+
 // mongodb
 const url = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.9ttivus.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -63,9 +79,9 @@ app.get("/user/:email", async (req, res) => {
 });
 
 // add products
-app.post("/add-product",async(req,res)=>{
+app.post("/add-products",async(req,res)=>{
   const product=req.body
-  const result=productCollection.insertOne(product)
+  const result=await productCollection.insertOne(product)
   res.send(result)
 })
 // api
