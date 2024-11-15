@@ -62,6 +62,12 @@ app.get("/user/:email", async (req, res) => {
   res.send(result);
 });
 
+// add products
+app.post("/add-product",async(req,res)=>{
+  const product=req.body
+  const result=productCollection.insertOne(product)
+  res.send(result)
+})
 // api
 app.get("/", (req, res) => {
   res.send("gadget server is running ");
