@@ -84,6 +84,7 @@ app.post("/users", async (req, res) => {
 });
 
 // get user
+
 app.get("/user/:email", async (req, res) => {
   const query = { email: req.params.email };
   const result = await userCollection.findOne(query);
