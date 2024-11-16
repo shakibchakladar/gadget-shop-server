@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, Code } = require("mongodb");
 require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 4000;
@@ -37,7 +37,7 @@ const verifySeller = async (req, res, next) => {
   const query = { email: email };
   const user = await userCollection.findOne(query);
   if (user?.role !== "seller") {
-    return res.send({ message: "Forbidden access" });
+    return res.send({ message: "Forbidden access", code:403 });
   }
   next();
 };
