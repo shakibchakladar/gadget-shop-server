@@ -84,7 +84,6 @@ app.post("/users", async (req, res) => {
 });
 
 // get user
-
 app.get("/user/:email", async (req, res) => {
   const query = { email: req.params.email };
   const result = await userCollection.findOne(query);
@@ -95,6 +94,12 @@ app.get("/user/:email", async (req, res) => {
 app.post("/add-products",verifyJWT,verifySeller, async(req,res)=>{
   const product=req.body
   const result=await productCollection.insertOne(product)
+  res.send(result)
+})
+
+// get products
+app.get("/products",async(req,res)=>{
+  const result=await productCollection.find().toArray();
   res.send(result)
 })
 // api
