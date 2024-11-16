@@ -17,31 +17,31 @@ app.use(
 app.use(express.json());
 
 // token verification
-const verifyJWT=(req,res,next)=>{
-  const authorization=req.headers.authorization;
-  if(!authorization){
-    return res.send({message:'no token found'})
+const verifyJWT = (req, res, next) => {
+  const authorization = req.headers.authorization;
+  if (!authorization) {
+    return res.send({ message: "No token found" });
   }
-  const token=authorization.split(' ')[1];
-  jwt.verify(token,process.env.ACCESS_KEY_TOKEN,(err,decoded)=>{
-    if(err){
-      return res.send({message: 'invalid token'})
+  const token = authorization.split(" ")[1];
+  jwt.verify(token, process.env.ACCESS_KEY_TOKEN, (err, decoded) => {
+    if (err) {
+      return res.send({ message: "invalid token" });
     }
-    req.decoded=decoded;
+    req.decoded = decoded;
     next();
-  })
-}
+  });
+};
 
 // verrify seller
-const verifySeller=async(req,res,next)=>{
-  const email=req.decoded.email;
-  const query={email:email}
-  const user=await userCollection.findOne(query)
-  if(user?.role !=='seller'){
-    return res.send({message: 'Forbidden access'})
+const verifySeller = async (req, res, next) => {
+  const email = req.decoded.email;
+  const query = { email: email };
+  const user = await userCollection.findOne(query);
+  if (user?.role !== "seller") {
+    return res.send({ message: "Forbidden access" });
   }
   next();
-}
+};
 
 // mongodb
 const url = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.9ttivus.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -91,22 +91,21 @@ app.get("/user/:email", async (req, res) => {
 });
 
 // add products
-app.post("/add-products",verifyJWT,verifySeller, async(req,res)=>{
-  const product=req.body
-  const result=await productCollection.insertOne(product)
-  res.send(result)
-})
+app.post("/add-products", verifyJWT, verifySeller, async (req, res) => {
+  const product = req.body;
+  const result = await productCollection.insertOne(product);
+  res.send(result);
+});
 
 // get products
-app.get("/products",async(req,res)=>{
-  const result=await productCollection.find().toArray();
-  res.send(result)
-})
+app.get("/products", async (req, res) => {
+  const result = await productCollection.find().toArray();
+  res.send(result);
+});
 // api
 app.get("/", (req, res) => {
   res.send("gadget server is running ");
 });
-
 
 // jwt
 app.post("/authentication", async (req, res) => {
