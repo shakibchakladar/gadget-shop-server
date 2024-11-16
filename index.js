@@ -78,7 +78,6 @@ app.post("/users", async (req, res) => {
   if (existingUser) {
     return res.send({ message: "user already exist in db" });
   }
-
   const result = await userCollection.insertOne(user);
   res.send(result);
 });
