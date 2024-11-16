@@ -102,7 +102,7 @@ app.get("/products", async (req, res) => {
 });
 // api
 app.get("/", (req, res) => {
-  res.send("gadget server is running ");
+  res.send("gadget shop server is running ");
 });
 
 // jwt
