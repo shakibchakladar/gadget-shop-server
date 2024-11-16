@@ -100,6 +100,7 @@ app.get("/", (req, res) => {
   res.send("gadget server is running ");
 });
 
+
 // jwt
 app.post("/authentication", async (req, res) => {
   const userEmail = req.body;
