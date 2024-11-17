@@ -37,7 +37,7 @@ const verifySeller = async (req, res, next) => {
   const query = { email: email };
   const user = await userCollection.findOne(query);
   if (user?.role !== "seller") {
-    return res.send({ message: "Forbidden access", code:403 });
+    return res.send({ message: "Forbidden access", code: 403 });
   }
   next();
 };
@@ -95,11 +95,86 @@ app.post("/add-products", verifyJWT, verifySeller, async (req, res) => {
   res.send(result);
 });
 
+// // get products
+
+// app.get("/all-products", async (req, res) => {
+//   const { title, sort, category, brand } = req.query;
+//   const query = {};
+
+//   if (title) {
+//     query.title = { $regex: title, $options: "i" };
+//   }
+//   if (category) {
+//     query.category = { $regex: category, $options: "i" };
+//   }
+//   if (brand) {
+//     query.brand = { $regex: brand, $options: "i" };
+//   }
+
+//   const sortOption = sort === "asc" ? 1 : -1;
+
+//   const products = await productCollection
+//     .find(query)
+//     .sort({ price: sortOption })
+//     .toArray();
+//     const totalProducts=await productCollection.countDocuments(query);
+
+//   const productInfo = await productCollection
+//     .find({}, { projection: { category: 1, brand: 1 } })
+//     .toArray();
+//     const brand=[...new Set(productInfo.map(p=>p.brand))]
+//     const categories=[...new Set(productInfo.map(p=>p.category))]
+
+
+//   res.json(products,brand,category);
+// });
+
 // get products
-app.get("/products", async (req, res) => {
-  const result = await productCollection.find().toArray();
-  res.send(result);
+app.get("/all-products", async (req, res) => {
+  const { title, sort, category, brand,page=1,limit=9 } = req.query;
+  const query = {};
+
+  if (title) {
+    query.title = { $regex: title, $options: "i" };
+  }
+  if (category) {
+    query.category = { $regex: category, $options: "i" };
+  }
+  if (brand) {
+    query.brand = { $regex: brand, $options: "i" };
+  }
+
+  const pageNumber=Number(page)
+  const limitNumber=Number(limit)
+
+
+  const sortOption = sort === "asc" ? 1 : -1;
+
+  const products = await productCollection
+    .find(query)
+    .skip((pageNumber-1)*limitNumber)
+    .limit(limitNumber)
+    .sort({ price: sortOption })
+    .toArray();
+
+  const totalProducts = await productCollection.countDocuments(query);
+
+  // const productInfo = await productCollection
+  //   .find({}, { projection: { category: 1, brand: 1 } })
+  //   .toArray();
+
+  const brands = [...new Set(products.map(p => p.brand))];
+  const categories = [...new Set(products.map(p => p.category))];
+  res.json({
+    products,
+    totalProducts,
+    brands,
+    categories
+  });
 });
+
+
+
 // api
 app.get("/", (req, res) => {
   res.send("gadget shop server is running ");
