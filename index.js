@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
-const { MongoClient, ServerApiVersion, Code } = require("mongodb");
+const { MongoClient, ServerApiVersion, Code, ObjectId } = require("mongodb");
 require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 4000;
@@ -125,13 +125,12 @@ app.post("/add-products", verifyJWT, verifySeller, async (req, res) => {
 //     const brand=[...new Set(productInfo.map(p=>p.brand))]
 //     const categories=[...new Set(productInfo.map(p=>p.category))]
 
-
 //   res.json(products,brand,category);
 // });
 
 // get products
 app.get("/all-products", async (req, res) => {
-  const { title, sort, category, brand,page=1,limit=9 } = req.query;
+  const { title, sort, category, brand, page = 1, limit = 9 } = req.query;
   const query = {};
 
   if (title) {
@@ -144,15 +143,14 @@ app.get("/all-products", async (req, res) => {
     query.brand = { $regex: brand, $options: "i" };
   }
 
-  const pageNumber=Number(page)
-  const limitNumber=Number(limit)
-
+  const pageNumber = Number(page);
+  const limitNumber = Number(limit);
 
   const sortOption = sort === "asc" ? 1 : -1;
 
   const products = await productCollection
     .find(query)
-    .skip((pageNumber-1)*limitNumber)
+    .skip((pageNumber - 1) * limitNumber)
     .limit(limitNumber)
     .sort({ price: sortOption })
     .toArray();
@@ -163,17 +161,53 @@ app.get("/all-products", async (req, res) => {
   //   .find({}, { projection: { category: 1, brand: 1 } })
   //   .toArray();
 
-  const brands = [...new Set(products.map(p => p.brand))];
-  const categories = [...new Set(products.map(p => p.category))];
+  const brands = [...new Set(products.map((p) => p.brand))];
+  const categories = [...new Set(products.map((p) => p.category))];
   res.json({
     products,
     totalProducts,
     brands,
-    categories
+    categories,
   });
 });
 
+//add to wishlist
+app.patch("/wishlist/add", async (req, res) => {
+  const { userEmail, productId } = req.body;
+  const result = await userCollection.updateOne(
+    { email: userEmail },
+    { $addToSet: { wishlist: new ObjectId(String(productId)) } }
+  );
+  res.send(result);
+});
 
+// remove from wishlist
+app.patch("/wishlist/remove", async (req, res) => {
+  const { userEmail, productId } = req.body;
+  const result = await userCollection.updateOne(
+    { email: userEmail },
+    { $pull: { wishlist: new ObjectId(String(productId)) } }
+  );
+  res.send(result);
+});
+
+// get data from wishlist
+app.get("/wishlist/:userId", verifyJWT, async (req, res) => {
+  const { userId } = req.params;
+  // console.log(userId);
+  const user = await userCollection.findOne({
+    _id: new ObjectId(String(userId)),
+  });
+
+  if (!user) {
+    return res.send({ message: "user not found" });
+  }
+
+  const wishlist = await productCollection
+    .find({ _id: { $in: user.wishlist || [] } })
+    .toArray();
+  res.send(wishlist);
+});
 
 // api
 app.get("/", (req, res) => {
